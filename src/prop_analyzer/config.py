@@ -113,10 +113,10 @@ class PropAnalyzerConfig:
         This method determines the project root directory and sets up
         all path attributes based on the data_root configuration.
         """
-        # Determine project root (two levels up from this file)
+        # Determine project root (three levels up from this file)
         # File location: src/prop_analyzer/config.py
-        # Project root: ../../
-        self._project_root = Path(__file__).parent.parent.parent.parent
+        # Path: config.py -> prop_analyzer/ -> src/ -> PROJECT_ROOT/
+        self._project_root = Path(__file__).parent.parent.parent
 
         # Set default data_root if not provided
         if self.data_root is None:
