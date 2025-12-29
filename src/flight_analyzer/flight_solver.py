@@ -351,37 +351,60 @@ class FlightSolver:
             motor_rpm = prop_rpm
             result.motor_rpm = motor_rpm
 
-            # Get motor state at this RPM
-            motor_state = self.motor_analyzer.get_state_at_rpm(
-                motor_id, v_battery, motor_rpm, winding_temp
-            )
-
-            if not motor_state.get('valid', True):
-                result.error_message = f"Motor cannot operate at {motor_rpm:.0f} RPM"
-                return result
-
-            result.motor_current = motor_state['current']
-            result.motor_power_elec = motor_state['p_elec']
-            result.motor_power_mech = motor_state['p_mech']
-            result.motor_efficiency = motor_state['efficiency']
-            result.motor_torque = motor_state['torque']
-
-            # Step 4: Calculate throttle
+            # Get motor parameters
             motor = self.motor_analyzer.get_motor(motor_id)
             rm = self.motor_analyzer.config.resistance_at_temp(
                 motor.rm_cold, winding_temp
             )
-            v_bemf = motor_rpm / motor.kv
-            v_motor_needed = v_bemf + motor_state['current'] * rm
 
-            throttle = (v_motor_needed / v_battery) * 100.0
-            result.throttle = throttle
+            # Calculate required torque from prop shaft power
+            # Power = Torque × ω where ω = 2π × RPM/60
+            omega = 2 * math.pi * motor_rpm / 60.0
+            if omega > 0:
+                required_torque = prop_power / omega
+            else:
+                required_torque = 0
+
+            result.motor_torque = required_torque
+
+            # Calculate current for that torque (using motor model)
+            motor_current = self.motor_analyzer.get_current_from_torque(
+                motor_id, required_torque, motor_rpm
+            )
+            result.motor_current = motor_current
+
+            # Calculate back-EMF and required voltage
+            v_bemf = motor_rpm / motor.kv
+            v_motor_needed = v_bemf + motor_current * rm
             result.motor_voltage = v_motor_needed
 
-            # Step 5: Check motor limits
-            if motor_state['current'] > motor.i_max:
+            # Check if motor can reach this RPM with available voltage
+            max_rpm = motor.kv * v_battery * 0.95
+            if motor_rpm > max_rpm:
                 result.error_message = (
-                    f"Motor current ({motor_state['current']:.1f}A) exceeds "
+                    f"Motor cannot reach {motor_rpm:.0f} RPM. "
+                    f"Max RPM at {v_battery:.1f}V is ~{max_rpm:.0f} RPM (KV={motor.kv}). "
+                    f"Try: higher voltage, higher KV motor, or larger/lower-pitch prop."
+                )
+                return result
+
+            # Step 4: Calculate throttle
+            throttle = (v_motor_needed / v_battery) * 100.0
+            result.throttle = throttle
+
+            # Calculate motor electrical power and efficiency
+            result.motor_power_elec = v_motor_needed * motor_current
+            result.motor_power_mech = prop_power  # Mechanical output = prop input
+
+            if result.motor_power_elec > 0:
+                result.motor_efficiency = result.motor_power_mech / result.motor_power_elec
+            else:
+                result.motor_efficiency = 0
+
+            # Step 5: Check motor limits
+            if motor_current > motor.i_max:
+                result.error_message = (
+                    f"Motor current ({motor_current:.1f}A) exceeds "
                     f"limit ({motor.i_max:.0f}A)"
                 )
                 # Still return partial result but mark as concerning
@@ -394,9 +417,9 @@ class FlightSolver:
                 # Still return partial result
 
             # Step 6: Calculate system totals (for all motors)
-            result.per_motor_current = motor_state['current']
-            result.battery_current = motor_state['current'] * num_motors
-            result.battery_power = motor_state['p_elec'] * num_motors
+            result.per_motor_current = motor_current
+            result.battery_current = motor_current * num_motors
+            result.battery_power = result.motor_power_elec * num_motors
 
             # System efficiency = useful_power / battery_power
             # Useful power = Thrust × Velocity
