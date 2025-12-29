@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Flight Analyzer Launcher
-========================
+Fixed-Wing FPV Flight Analyzer Launcher
+========================================
 
-Launch script for the Flight Performance Analyzer GUI.
+Launch script for the Fixed-Wing FPV Flight Performance Analyzer GUI.
 
-This application combines:
-- Airframe drag modeling (configurable methods)
-- Motor performance analysis with preset library
+This application analyzes fixed-wing FPV aircraft performance by combining:
+- Airframe drag modeling (parasitic + induced drag)
+- FPV motor performance analysis with preset library (2807, 3315, etc.)
 - Propeller performance analysis
 - Flight equilibrium solving
 
@@ -67,7 +67,7 @@ def check_dependencies():
 def main():
     """Launch the Flight Analyzer UI."""
     print("=" * 60)
-    print("  Drone Efficiency Optimizer - Flight Analyzer")
+    print("  Fixed-Wing FPV Flight Analyzer")
     print("=" * 60)
     print()
     print("Checking dependencies...")
