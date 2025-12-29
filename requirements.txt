@@ -1,9 +1,40 @@
-# Project runtime dependencies detected from code
-numpy>=1.26
-pandas>=2.0
-scipy>=1.11
-matplotlib>=3.8
+# ============================================================================
+# DroneEfficiencyOptimizer - Python Dependencies
+# ============================================================================
+#
+# Install all dependencies with:
+#   pip install -r requirements.txt
+#
+# For development, you may also want:
+#   pip install jupyter ipykernel
+#
+# ============================================================================
 
-# Dev / optional:
-# jupyter
-# ipykernel
+# -----------------------------------------------------------------------------
+# Core Scientific Computing
+# -----------------------------------------------------------------------------
+numpy>=1.26              # Numerical computing and array operations
+pandas>=2.0              # Data manipulation and analysis
+scipy>=1.11              # Scientific computing (interpolation, optimization)
+
+# -----------------------------------------------------------------------------
+# Visualization
+# -----------------------------------------------------------------------------
+matplotlib>=3.8          # Plotting and visualization (also used for UI embedding)
+
+# -----------------------------------------------------------------------------
+# Optional: Development Dependencies
+# -----------------------------------------------------------------------------
+# Uncomment these for development/notebook usage:
+# jupyter>=1.0           # Jupyter notebook support
+# ipykernel>=6.0         # IPython kernel for Jupyter
+
+# -----------------------------------------------------------------------------
+# Note on tkinter
+# -----------------------------------------------------------------------------
+# tkinter is required for the GUI but is typically included with Python.
+# If not available, install via your system package manager:
+#   Ubuntu/Debian: sudo apt-get install python3-tk
+#   Fedora: sudo dnf install python3-tkinter
+#   macOS: brew install python-tk
+#   Windows: Usually included with Python installer
