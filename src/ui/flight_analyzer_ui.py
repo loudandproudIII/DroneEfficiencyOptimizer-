@@ -204,7 +204,7 @@ class FlightAnalyzerUI:
             List of prop ID strings (e.g., "10x5", "11x7")
         """
         try:
-            return self.prop_analyzer.list_available_props()
+            return self.prop_analyzer.list_available_propellers()
         except Exception:
             # Return common sizes as fallback
             return [
