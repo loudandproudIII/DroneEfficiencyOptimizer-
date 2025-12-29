@@ -813,7 +813,7 @@ class FlightAnalyzerUI:
 
     def _register_motor(self) -> str:
         """
-        Register the current motor parameters with the analyzer.
+        Register the current motor parameters with the flight solver's analyzer.
 
         Returns:
         -------
@@ -822,7 +822,8 @@ class FlightAnalyzerUI:
         """
         motor_id = "UI_Motor"
 
-        self.motor_analyzer.add_motor(motor_id, {
+        # Register with the flight solver's internal motor analyzer
+        self.flight_solver.motor_analyzer.add_motor(motor_id, {
             "kv": float(self.motor_kv_var.get()),
             "rm_cold": float(self.motor_rm_var.get()),
             "i0_ref": float(self.motor_i0_var.get()),
