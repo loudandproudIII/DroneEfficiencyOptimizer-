@@ -1,0 +1,9 @@
+# Project runtime dependencies detected from code
+numpy>=1.26
+pandas>=2.0
+scipy>=1.11
+matplotlib>=3.8
+
+# Dev / optional:
+# jupyter
+# ipykernel
