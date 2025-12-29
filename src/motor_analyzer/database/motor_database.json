@@ -1,0 +1,165 @@
+{
+  "_description": "Motor database for DroneEfficiencyOptimizer Motor Analyzer",
+  "_units": {
+    "kv": "RPM/V",
+    "rm_cold": "Ohms (phase-to-phase at reference temp)",
+    "i0_ref": "Amps (no-load current at reference RPM)",
+    "i0_rpm_ref": "RPM (reference speed for I0 measurement)",
+    "temp_ref": "Celsius (reference temperature for Rm)",
+    "i_max": "Amps (maximum continuous current)",
+    "p_max": "Watts (maximum continuous power)",
+    "mass_g": "grams",
+    "poles": "number of magnetic poles"
+  },
+  "_notes": [
+    "All resistance values are phase-to-phase measurements",
+    "Temperature coefficient for copper: 0.00393 per degree C",
+    "Kt [Nm/A] = 30 / (pi * Kv)"
+  ],
+  "motors": {
+    "Scorpion SII-3014-830": {
+      "kv": 830,
+      "rm_cold": 0.028,
+      "i0_ref": 1.8,
+      "i0_rpm_ref": 8300,
+      "temp_ref": 25,
+      "i_max": 65,
+      "p_max": 1400,
+      "mass_g": 152,
+      "poles": 14,
+      "source": "manufacturer"
+    },
+    "Scorpion SII-3020-890": {
+      "kv": 890,
+      "rm_cold": 0.020,
+      "i0_ref": 2.2,
+      "i0_rpm_ref": 8900,
+      "temp_ref": 25,
+      "i_max": 80,
+      "p_max": 1800,
+      "mass_g": 195,
+      "poles": 14,
+      "source": "manufacturer"
+    },
+    "T-Motor U8 Lite 85KV": {
+      "kv": 85,
+      "rm_cold": 0.080,
+      "i0_ref": 0.5,
+      "i0_rpm_ref": 2000,
+      "temp_ref": 25,
+      "i_max": 35,
+      "p_max": 1200,
+      "mass_g": 240,
+      "poles": 36,
+      "source": "manufacturer"
+    },
+    "T-Motor U8 100KV": {
+      "kv": 100,
+      "rm_cold": 0.068,
+      "i0_ref": 0.6,
+      "i0_rpm_ref": 2500,
+      "temp_ref": 25,
+      "i_max": 40,
+      "p_max": 1500,
+      "mass_g": 280,
+      "poles": 36,
+      "source": "manufacturer"
+    },
+    "EMAX MT3515 650KV": {
+      "kv": 650,
+      "rm_cold": 0.042,
+      "i0_ref": 1.5,
+      "i0_rpm_ref": 6500,
+      "temp_ref": 25,
+      "i_max": 45,
+      "p_max": 900,
+      "mass_g": 132,
+      "poles": 12,
+      "source": "manufacturer"
+    },
+    "SunnySky X4112S 400KV": {
+      "kv": 400,
+      "rm_cold": 0.085,
+      "i0_ref": 0.8,
+      "i0_rpm_ref": 4000,
+      "temp_ref": 25,
+      "i_max": 30,
+      "p_max": 700,
+      "mass_g": 118,
+      "poles": 14,
+      "source": "manufacturer"
+    },
+    "KDE 4215XF-465": {
+      "kv": 465,
+      "rm_cold": 0.055,
+      "i0_ref": 1.2,
+      "i0_rpm_ref": 4650,
+      "temp_ref": 25,
+      "i_max": 55,
+      "p_max": 1300,
+      "mass_g": 175,
+      "poles": 24,
+      "source": "manufacturer"
+    },
+    "KDE 5215XF-435": {
+      "kv": 435,
+      "rm_cold": 0.040,
+      "i0_ref": 1.5,
+      "i0_rpm_ref": 4350,
+      "temp_ref": 25,
+      "i_max": 65,
+      "p_max": 1600,
+      "mass_g": 235,
+      "poles": 24,
+      "source": "manufacturer"
+    },
+    "Cobra CM-2217/20 1550KV": {
+      "kv": 1550,
+      "rm_cold": 0.045,
+      "i0_ref": 1.0,
+      "i0_rpm_ref": 12000,
+      "temp_ref": 25,
+      "i_max": 32,
+      "p_max": 400,
+      "mass_g": 68,
+      "poles": 12,
+      "source": "manufacturer"
+    },
+    "Cobra CM-2814/12 1050KV": {
+      "kv": 1050,
+      "rm_cold": 0.030,
+      "i0_ref": 1.4,
+      "i0_rpm_ref": 10000,
+      "temp_ref": 25,
+      "i_max": 45,
+      "p_max": 650,
+      "mass_g": 90,
+      "poles": 12,
+      "source": "manufacturer"
+    },
+    "Generic 2212 920KV": {
+      "kv": 920,
+      "rm_cold": 0.120,
+      "i0_ref": 0.5,
+      "i0_rpm_ref": 8000,
+      "temp_ref": 25,
+      "i_max": 15,
+      "p_max": 200,
+      "mass_g": 48,
+      "poles": 12,
+      "source": "typical"
+    },
+    "Generic 2814 700KV": {
+      "kv": 700,
+      "rm_cold": 0.060,
+      "i0_ref": 1.2,
+      "i0_rpm_ref": 7000,
+      "temp_ref": 25,
+      "i_max": 35,
+      "p_max": 500,
+      "mass_g": 85,
+      "poles": 12,
+      "source": "typical"
+    }
+  }
+}
