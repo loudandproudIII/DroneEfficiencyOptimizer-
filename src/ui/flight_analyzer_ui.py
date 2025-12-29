@@ -1,10 +1,11 @@
 """
-Flight Analyzer User Interface
-==============================
+Fixed-Wing FPV Flight Analyzer User Interface
+==============================================
 
-This module provides a comprehensive graphical user interface (GUI) that combines:
-- Airframe drag modeling (raw value OR calculated from coefficients)
-- Motor performance analysis with preset library
+This module provides a comprehensive graphical user interface (GUI) for
+analyzing fixed-wing FPV aircraft performance, combining:
+- Airframe drag modeling (parasitic + induced drag)
+- Motor performance analysis with FPV motor preset library
 - Propeller performance analysis
 - Flight equilibrium solving
 
@@ -14,9 +15,8 @@ system efficiency required to maintain level cruise at a given airspeed.
 Features:
 ---------
 - Drag input: Raw drag value OR calculated from Cd × Area
-- Motor preset selection with category filtering
+- Motor preset selection for FPV fixed-wing motors (2807, 3315, etc.)
 - Propeller selection from available database
-- Multi-motor support (quad, hex, octo, etc.)
 - Speed sweep for performance envelope
 - System efficiency visualization
 
@@ -33,8 +33,9 @@ For level cruise flight:
     Thrust = Drag
 
 Where:
-    Drag = 0.5 × ρ × V² × Cd × A   (coefficient method)
-    Drag = raw_value                (raw method)
+    Parasitic Drag = 0.5 × ρ × V² × Cd × A
+    Induced Drag = 0.5 × ρ × V² × CL² / (π × AR × e)  (for fixed-wing)
+    Total Drag = Parasitic + Induced
 
 System efficiency:
     η_system = (Thrust × Velocity) / Battery_Power
@@ -69,11 +70,11 @@ from src.flight_analyzer.config import FlightAnalyzerConfig, AIR_DENSITY_SEA_LEV
 
 class FlightAnalyzerUI:
     """
-    Comprehensive flight analyzer GUI combining drag, motor, and prop analysis.
+    Fixed-wing FPV flight analyzer GUI combining drag, motor, and prop analysis.
 
     This interface allows users to:
     1. Configure airframe drag (raw value OR from coefficients)
-    2. Select motor from preset library
+    2. Select motor from FPV fixed-wing preset library
     3. Select propeller
     4. Set flight conditions (voltage, airspeed, altitude)
     5. Solve for equilibrium (throttle, current, efficiency)
@@ -84,7 +85,7 @@ class FlightAnalyzerUI:
     # UI Constants
     # =========================================================================
 
-    WINDOW_TITLE = "Drone Efficiency Optimizer - Flight Analyzer"
+    WINDOW_TITLE = "Fixed-Wing FPV Flight Analyzer"
     WINDOW_MIN_WIDTH = 1300
     WINDOW_MIN_HEIGHT = 900
 
@@ -92,26 +93,12 @@ class FlightAnalyzerUI:
     WIDGET_PADDING = 3
     SECTION_PADDING = 5
 
-    # Common battery configurations (cells × nominal voltage)
+    # Common battery configurations for FPV fixed-wing (cells × nominal voltage)
     BATTERY_OPTIONS = {
         "3S (11.1V)": 11.1,
         "4S (14.8V)": 14.8,
         "5S (18.5V)": 18.5,
         "6S (22.2V)": 22.2,
-        "8S (29.6V)": 29.6,
-        "10S (37.0V)": 37.0,
-        "12S (44.4V)": 44.4,
-        "14S (51.8V)": 51.8,
-    }
-
-    # Multi-motor configurations
-    MOTOR_COUNT_OPTIONS = {
-        "Single Motor": 1,
-        "Bi-copter (2)": 2,
-        "Tri-copter (3)": 3,
-        "Quad-copter (4)": 4,
-        "Hex-copter (6)": 6,
-        "Octo-copter (8)": 8,
     }
 
     def __init__(self):
@@ -238,7 +225,7 @@ class FlightAnalyzerUI:
         # Title
         title_label = ttk.Label(
             header_frame,
-            text="Flight Performance Analyzer",
+            text="Fixed-Wing FPV Flight Analyzer",
             font=("Helvetica", 18, "bold")
         )
         title_label.pack(anchor="w")
@@ -246,7 +233,7 @@ class FlightAnalyzerUI:
         # Description
         desc_label = ttk.Label(
             header_frame,
-            text="Solve for cruise flight equilibrium: Throttle, Current, and System Efficiency",
+            text="Analyze cruise performance: Throttle, Current, Power, and System Efficiency",
             font=("Helvetica", 10)
         )
         desc_label.pack(anchor="w")
@@ -297,7 +284,7 @@ class FlightAnalyzerUI:
         method_combo = ttk.Combobox(
             method_frame,
             textvariable=self.drag_method_var,
-            values=["coefficient", "raw", "flat_plate", "multirotor"],
+            values=["coefficient", "raw", "flat_plate", "fixed_wing"],
             state="readonly",
             width=15
         )
@@ -308,7 +295,7 @@ class FlightAnalyzerUI:
         self.drag_notebook = ttk.Notebook(frame)
         self.drag_notebook.pack(fill="x", pady=5)
 
-        # Tab 1: Coefficient Method
+        # Tab 1: Coefficient Method (simple parasitic drag)
         coef_frame = ttk.Frame(self.drag_notebook, padding=5)
         self.drag_notebook.add(coef_frame, text="Cd × Area")
 
@@ -316,15 +303,15 @@ class FlightAnalyzerUI:
         row1 = ttk.Frame(coef_frame)
         row1.pack(fill="x", pady=2)
         ttk.Label(row1, text="Drag Coefficient (Cd):", width=22).pack(side="left")
-        self.cd_var = tk.StringVar(value="1.0")
+        self.cd_var = tk.StringVar(value="0.04")
         ttk.Entry(row1, textvariable=self.cd_var, width=12).pack(side="left")
-        ttk.Label(row1, text="(0.3-1.5 typical)").pack(side="left", padx=5)
+        ttk.Label(row1, text="(0.02-0.08 typical)").pack(side="left", padx=5)
 
-        # Reference area
+        # Reference area (wing area for aircraft)
         row2 = ttk.Frame(coef_frame)
         row2.pack(fill="x", pady=2)
-        ttk.Label(row2, text="Reference Area:", width=22).pack(side="left")
-        self.ref_area_var = tk.StringVar(value="0.02")
+        ttk.Label(row2, text="Wing Area:", width=22).pack(side="left")
+        self.ref_area_var = tk.StringVar(value="0.15")
         ttk.Entry(row2, textvariable=self.ref_area_var, width=12).pack(side="left")
         ttk.Label(row2, text="m²").pack(side="left", padx=5)
 
@@ -335,7 +322,7 @@ class FlightAnalyzerUI:
         row_raw = ttk.Frame(raw_frame)
         row_raw.pack(fill="x", pady=2)
         ttk.Label(row_raw, text="Drag Force:", width=22).pack(side="left")
-        self.raw_drag_var = tk.StringVar(value="1.0")
+        self.raw_drag_var = tk.StringVar(value="0.5")
         ttk.Entry(row_raw, textvariable=self.raw_drag_var, width=12).pack(side="left")
         ttk.Label(row_raw, text="N").pack(side="left", padx=5)
 
@@ -346,27 +333,53 @@ class FlightAnalyzerUI:
         row_flat = ttk.Frame(flat_frame)
         row_flat.pack(fill="x", pady=2)
         ttk.Label(row_flat, text="Flat Plate Area (f):", width=22).pack(side="left")
-        self.flat_plate_var = tk.StringVar(value="0.01")
+        self.flat_plate_var = tk.StringVar(value="0.006")
         ttk.Entry(row_flat, textvariable=self.flat_plate_var, width=12).pack(side="left")
         ttk.Label(row_flat, text="m² (Cd × A)").pack(side="left", padx=5)
 
-        # Tab 4: Multirotor Frame
-        multi_frame = ttk.Frame(self.drag_notebook, padding=5)
-        self.drag_notebook.add(multi_frame, text="Multirotor")
+        # Tab 4: Fixed-Wing with Induced Drag
+        fw_frame = ttk.Frame(self.drag_notebook, padding=5)
+        self.drag_notebook.add(fw_frame, text="Fixed-Wing")
 
-        row_front = ttk.Frame(multi_frame)
-        row_front.pack(fill="x", pady=2)
-        ttk.Label(row_front, text="Frontal Area:", width=22).pack(side="left")
-        self.frontal_area_var = tk.StringVar(value="0.02")
-        ttk.Entry(row_front, textvariable=self.frontal_area_var, width=12).pack(side="left")
-        ttk.Label(row_front, text="m²").pack(side="left", padx=5)
+        # Wing area
+        row_wing = ttk.Frame(fw_frame)
+        row_wing.pack(fill="x", pady=2)
+        ttk.Label(row_wing, text="Wing Area:", width=22).pack(side="left")
+        self.wing_area_var = tk.StringVar(value="0.15")
+        ttk.Entry(row_wing, textvariable=self.wing_area_var, width=12).pack(side="left")
+        ttk.Label(row_wing, text="m²").pack(side="left", padx=5)
 
-        row_framecd = ttk.Frame(multi_frame)
-        row_framecd.pack(fill="x", pady=2)
-        ttk.Label(row_framecd, text="Frame Cd:", width=22).pack(side="left")
-        self.frame_cd_var = tk.StringVar(value="1.0")
-        ttk.Entry(row_framecd, textvariable=self.frame_cd_var, width=12).pack(side="left")
-        ttk.Label(row_framecd, text="(0.5-1.5)").pack(side="left", padx=5)
+        # Wingspan
+        row_span = ttk.Frame(fw_frame)
+        row_span.pack(fill="x", pady=2)
+        ttk.Label(row_span, text="Wingspan:", width=22).pack(side="left")
+        self.wingspan_var = tk.StringVar(value="1.0")
+        ttk.Entry(row_span, textvariable=self.wingspan_var, width=12).pack(side="left")
+        ttk.Label(row_span, text="m").pack(side="left", padx=5)
+
+        # Aircraft weight (for induced drag calculation)
+        row_weight = ttk.Frame(fw_frame)
+        row_weight.pack(fill="x", pady=2)
+        ttk.Label(row_weight, text="Aircraft Weight:", width=22).pack(side="left")
+        self.weight_var = tk.StringVar(value="1.0")
+        ttk.Entry(row_weight, textvariable=self.weight_var, width=12).pack(side="left")
+        ttk.Label(row_weight, text="kg").pack(side="left", padx=5)
+
+        # Parasitic drag coefficient (Cd0)
+        row_cd0 = ttk.Frame(fw_frame)
+        row_cd0.pack(fill="x", pady=2)
+        ttk.Label(row_cd0, text="Cd0 (parasitic):", width=22).pack(side="left")
+        self.cd0_var = tk.StringVar(value="0.025")
+        ttk.Entry(row_cd0, textvariable=self.cd0_var, width=12).pack(side="left")
+        ttk.Label(row_cd0, text="(0.02-0.04)").pack(side="left", padx=5)
+
+        # Oswald efficiency
+        row_oswald = ttk.Frame(fw_frame)
+        row_oswald.pack(fill="x", pady=2)
+        ttk.Label(row_oswald, text="Oswald Efficiency (e):", width=22).pack(side="left")
+        self.oswald_var = tk.StringVar(value="0.8")
+        ttk.Entry(row_oswald, textvariable=self.oswald_var, width=12).pack(side="left")
+        ttk.Label(row_oswald, text="(0.7-0.85)").pack(side="left", padx=5)
 
         # Altitude (affects air density)
         alt_frame = ttk.Frame(frame)
@@ -509,23 +522,9 @@ class FlightAnalyzerUI:
         volt_frame = ttk.Frame(frame)
         volt_frame.pack(fill="x", pady=2)
         ttk.Label(volt_frame, text="Voltage:", width=18).pack(side="left")
-        self.voltage_var = tk.StringVar(value="22.2")
+        self.voltage_var = tk.StringVar(value="14.8")
         ttk.Entry(volt_frame, textvariable=self.voltage_var, width=12).pack(side="left")
         ttk.Label(volt_frame, text="V").pack(side="left", padx=5)
-
-        # Motor count
-        count_frame = ttk.Frame(frame)
-        count_frame.pack(fill="x", pady=2)
-        ttk.Label(count_frame, text="Configuration:", width=18).pack(side="left")
-        self.motor_count_var = tk.StringVar()
-        count_combo = ttk.Combobox(
-            count_frame,
-            textvariable=self.motor_count_var,
-            values=list(self.MOTOR_COUNT_OPTIONS.keys()),
-            state="readonly",
-            width=15
-        )
-        count_combo.pack(side="left", padx=5)
 
         # Target airspeed
         speed_frame = ttk.Frame(frame)
@@ -721,7 +720,7 @@ class FlightAnalyzerUI:
             "coefficient": 0,
             "raw": 1,
             "flat_plate": 2,
-            "multirotor": 3
+            "fixed_wing": 3
         }
         tab_idx = method_to_tab.get(method, 0)
         self.drag_notebook.select(tab_idx)
@@ -797,14 +796,20 @@ class FlightAnalyzerUI:
                 method="flat_plate",
                 flat_plate_area=float(self.flat_plate_var.get())
             )
-        elif method == "multirotor":
+        elif method == "fixed_wing":
+            # Fixed-wing with induced drag calculation
+            weight_kg = float(self.weight_var.get())
+            weight_n = weight_kg * 9.81  # Convert kg to N
             return DragModel(
-                method="multirotor",
-                frontal_area=float(self.frontal_area_var.get()),
-                frame_cd=float(self.frame_cd_var.get())
+                method="fixed_wing",
+                cd0=float(self.cd0_var.get()),
+                wing_area=float(self.wing_area_var.get()),
+                wingspan=float(self.wingspan_var.get()),
+                weight=weight_n,
+                oswald_efficiency=float(self.oswald_var.get())
             )
         else:
-            return DragModel(method="coefficient", cd=1.0, reference_area=0.02)
+            return DragModel(method="coefficient", cd=0.04, reference_area=0.15)
 
     def _register_motor(self) -> str:
         """
@@ -850,9 +855,8 @@ class FlightAnalyzerUI:
             airspeed = float(self.airspeed_var.get())
             altitude = float(self.altitude_var.get())
             winding_temp = float(self.winding_temp_var.get())
-            motor_count = self.MOTOR_COUNT_OPTIONS.get(self.motor_count_var.get(), 1)
 
-            # Solve
+            # Solve (fixed-wing = single motor)
             result = self.flight_solver.solve_cruise(
                 motor_id=motor_id,
                 prop_id=prop_id,
@@ -861,7 +865,7 @@ class FlightAnalyzerUI:
                 airspeed=airspeed,
                 altitude=altitude,
                 winding_temp=winding_temp,
-                num_motors=motor_count
+                num_motors=1
             )
 
             self.current_result = result
@@ -925,9 +929,8 @@ class FlightAnalyzerUI:
             v_battery = float(self.voltage_var.get())
             altitude = float(self.altitude_var.get())
             winding_temp = float(self.winding_temp_var.get())
-            motor_count = self.MOTOR_COUNT_OPTIONS.get(self.motor_count_var.get(), 1)
 
-            # Run sweep
+            # Run sweep (fixed-wing = single motor)
             results = self.flight_solver.solve_speed_sweep(
                 motor_id=motor_id,
                 prop_id=prop_id,
@@ -936,7 +939,7 @@ class FlightAnalyzerUI:
                 speed_range=(5, 50),
                 altitude=altitude,
                 winding_temp=winding_temp,
-                num_motors=motor_count,
+                num_motors=1,
                 num_points=25
             )
 
@@ -1038,9 +1041,8 @@ class FlightAnalyzerUI:
             v_battery = float(self.voltage_var.get())
             altitude = float(self.altitude_var.get())
             winding_temp = float(self.winding_temp_var.get())
-            motor_count = self.MOTOR_COUNT_OPTIONS.get(self.motor_count_var.get(), 1)
 
-            # Find max speed
+            # Find max speed (fixed-wing = single motor)
             result = self.flight_solver.find_max_speed(
                 motor_id=motor_id,
                 prop_id=prop_id,
@@ -1048,7 +1050,7 @@ class FlightAnalyzerUI:
                 v_battery=v_battery,
                 altitude=altitude,
                 winding_temp=winding_temp,
-                num_motors=motor_count
+                num_motors=1
             )
 
             if result.valid:
@@ -1080,24 +1082,21 @@ class FlightAnalyzerUI:
     def _set_defaults(self):
         """Set default values for UI elements."""
         # Battery
+        # Default to 4S for typical FPV fixed-wing
         if self.BATTERY_OPTIONS:
-            first_battery = "6S (22.2V)"
+            first_battery = "4S (14.8V)"
             if first_battery in self.BATTERY_OPTIONS:
                 self.battery_var.set(first_battery)
                 self.voltage_var.set(str(self.BATTERY_OPTIONS[first_battery]))
 
-        # Motor count
-        if self.MOTOR_COUNT_OPTIONS:
-            self.motor_count_var.set("Quad-copter (4)")
-
-        # Motor category
+        # Motor category - default to first category
         if self.motor_categories:
             self.motor_category_var.set(self.motor_categories[0])
             self._on_motor_category_change()
 
-        # Propeller
+        # Propeller - common FPV fixed-wing props
         if self.available_props:
-            default_props = ["10x5", "10x4.5", "11x5.5"]
+            default_props = ["7x4", "8x4", "9x6", "10x5"]
             for dp in default_props:
                 if dp in self.available_props:
                     self.prop_var.set(dp)
